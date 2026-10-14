@@ -32,6 +32,37 @@ def is_isomorhipic(tree1: "Node", tree2: "Node") -> bool:
 
 
 class TestNeighborJoining(unittest.TestCase):
+    def test_basic_joining(self):
+        from helper_functions import neighbor_joining
+
+        distances = np.array(
+            [
+                [0, 1, 2],
+                [1, 0, 3],
+                [2, 3, 0],
+            ],
+            dtype=float,
+        )
+        labels = list("ABC")
+        tree = neighbor_joining(distances, labels)
+
+        self.assertEqual(tree.left.name, "C")
+        self.assertAlmostEqual(tree.left_distance, 1)
+        self.assertAlmostEqual(tree.right_distance, 1)
+        self.assertEqual(tree.right.left.name, "A")
+        self.assertAlmostEqual(tree.right.left_distance, 0)
+        self.assertEqual(tree.right.right.name, "B")
+        self.assertAlmostEqual(tree.right.right_distance, 1)
+
+    def test_joining_two_leaves(self):
+        from helper_functions import neighbor_joining
+
+        tree = neighbor_joining(np.array([[0, 8], [8, 0]], dtype=float), ["A", "B"])
+
+        self.assertEqual({tree.left.name, tree.right.name}, {"A", "B"})
+        self.assertEqual(tree.left_distance, 4)
+        self.assertEqual(tree.right_distance, 4)
+
     def test_neighbor_joining_node_api(self):
         from helper_functions import neighbor_joining, Node
 

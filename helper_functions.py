@@ -114,7 +114,42 @@ def neighbor_joining(distances: np.ndarray, labels: list) -> Node:
         )
         next_node_number += 1
 
-    return None
+        # Update distance array by adding new node and removing the merged nodes
+        unused_nodes = [index for index in range(n) if index not in (i, j)]
+        new_n = n - 1
+        new_distances = np.zeros((new_n, new_n), dtype=float)
+        next_nodes = [active_nodes[index] for index in unused_nodes]
+
+        # Use updated indices
+        for new_i, k in enumerate(unused_nodes):
+            for new_j in range(new_i + 1, len(unused_nodes)):
+                old_j = unused_nodes[new_j]
+                distance = active_distances[k, old_j]
+                # Make the matrix symmetric
+                new_distances[new_i, new_j] = distance
+                new_distances[new_j, new_i] = distance
+
+            # Update distance to all other nodes
+            joined_distance = (
+                active_distances[i, k]
+                + active_distances[j, k]
+                - distance_ij
+            ) / 2
+            new_distances[new_i, -1] = joined_distance
+            new_distances[-1, new_i] = joined_distance
+
+        next_nodes.append(new_node)
+        active_nodes = next_nodes
+        active_distances = new_distances
+
+    final_distance = active_distances[0, 1] / 2
+    return Node(
+        "root",
+        active_nodes[0],
+        final_distance,
+        active_nodes[1],
+        final_distance,
+    )
 
 
 def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
