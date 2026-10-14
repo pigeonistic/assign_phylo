@@ -4,6 +4,7 @@ from copy import deepcopy
 from matplotlib.axes import Axes
 
 
+
 class Node:
     def __init__(
         self,
@@ -152,7 +153,7 @@ def neighbor_joining(distances: np.ndarray, labels: list) -> Node:
     )
 
 
-def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
+def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> Axes:
     """A function for plotting neighbor joining phylogeny dendrogram.
 
     Parameters
@@ -175,6 +176,43 @@ def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
     >>> fig.savefig("example.png")
 
     """
+
+    next_leaf_y = 0
+
+    def in_order_traversal(node: Node, x_position: float) -> float:
+        nonlocal next_leaf_y
+
+        # If we reach a leaf, add the label of the node since this is a taxa
+        # Add to y position for even spacing (also spaces the root)
+        if node.left is None and node.right is None:
+            y_position = next_leaf_y
+            next_leaf_y += 1
+            ax.text(
+                x_position,
+                y_position,
+                f"  {node.name}",
+                color="k",
+                fontsize=12,
+                verticalalignment="center",
+            )
+            return y_position
+
+        left_x = x_position + node.left_distance
+        right_x = x_position + node.right_distance
+        left_y = in_order_traversal(node.left, left_x)
+        right_y = in_order_traversal(node.right, right_x)
+
+        # Add vertical/horizontal lines
+        ax.plot([x_position, left_x], [left_y, left_y], color="k", lw=1.5)
+        ax.plot([x_position, right_x], [right_y, right_y], color="k", lw=1.5)
+        ax.plot([x_position, x_position], [left_y, right_y], color="k", lw=1.5)
+        return (left_y + right_y) / 2
+
+    root_y = in_order_traversal(tree, 0.0)
+
+    # Add a small line at the root to look pretty
+    if tree.left is not None and tree.right is not None:
+        ax.plot([-0.2, 0.0], [root_y, root_y], color="k", lw=1.5)
 
     return ax
 

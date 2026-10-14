@@ -332,6 +332,48 @@ class TestPlottingDendrogram(unittest.TestCase):
 
         f.savefig("tests/test_plotting_dendrogram.png", dpi=400, bbox_inches="tight")
 
+    def test_long_name(self):
+        import matplotlib.pyplot as plt
+        from helper_functions import Node, plot_nj_tree
+
+        tree = Node(
+            "ROOT",
+            Node("A very long species name it is so long and scary oh my goodness", None, 0, None, 0),
+            2,
+            Node("B", None, 0, None, 0),
+            3,
+        )
+        figure, ax = plt.subplots(1, 1, figsize=(4, 4))
+        plot_nj_tree(tree, ax=ax)
+        
+        figure.savefig("tests/test_long_name.png", dpi=400, bbox_inches="tight")
+
+    def test_plot_tree_with_many_leaves(self):
+        import matplotlib.pyplot as plt
+        from helper_functions import Node, plot_nj_tree
+
+        def make_balanced_tree(labels):
+            if len(labels) == 1:
+                return Node(labels[0], None, 0, None, 0)
+
+            midpoint = len(labels) // 2
+            return Node(
+                "X",
+                make_balanced_tree(labels[:midpoint]),
+                1,
+                make_balanced_tree(labels[midpoint:]),
+                1,
+            )
+
+        labels = [f"{index}" for index in range(64)]
+        tree = make_balanced_tree(labels)
+        figure, ax = plt.subplots(figsize=(14, 16))
+        plot_nj_tree(tree, ax=ax)
+
+
+        ax.set_title("Neighbor-joining tree with 64 leaves")
+        figure.savefig("tests/test_many_nodes.png", dpi=150, bbox_inches="tight")
+
 
 if __name__ == "__main__":
     unittest.main()
