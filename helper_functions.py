@@ -70,10 +70,51 @@ def neighbor_joining(distances: np.ndarray, labels: list) -> Node:
         A root node of the neighbor joining tree.
 
     """
-    
-    self.tree = Node()
 
-    raise NotImplementedError()
+    # Create a node for each possible neighbour
+    active_distances = np.array(distances, dtype=float, copy=True)
+    active_nodes = [Node(label, None, 0.0, None, 0.0) for label in labels]
+    if len(active_nodes) == 1:
+        return active_nodes[0]
+    next_node_number = 1
+
+    # Merge until there are no nodes left to merge
+    while len(active_nodes) > 2:
+        n = len(active_nodes)
+        row_sums = active_distances.sum(axis=1)
+
+        q_matrix = np.full((n, n), np.inf)
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                q_matrix[i, j] = (
+                    (n - 2) * active_distances[i, j]
+                    - row_sums[i]
+                    - row_sums[j]
+                )
+
+        # Get the index of the minimum value
+        i, j = np.unravel_index(np.argmin(q_matrix), q_matrix.shape)
+
+        # Join the pair with smallest value and recompute distances
+        distance_ij = active_distances[i, j]
+        distance_iu = (
+            distance_ij / 2
+            + (row_sums[i] - row_sums[j]) / (2 * (n - 2))
+        )
+        distance_ju = distance_ij - distance_iu
+
+        # Create new node linked to i/j
+        new_node = Node(
+            f"node {next_node_number}",
+            active_nodes[i],
+            distance_iu,
+            active_nodes[j],
+            distance_ju,
+        )
+        next_node_number += 1
+
+    return None
 
 
 def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
