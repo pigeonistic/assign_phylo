@@ -4,6 +4,14 @@ from copy import deepcopy
 from matplotlib.axes import Axes
 
 
+colours = {
+    "Alphacoronavirus": "#1b9e77",
+    "Betacoronavirus": "#d95f02",
+    "Gammacoronavirus": "#7570b3",
+    "Deltacoronavirus": "#e7298a",
+}
+
+
 
 class Node:
     def __init__(
@@ -153,7 +161,7 @@ def neighbor_joining(distances: np.ndarray, labels: list) -> Node:
     )
 
 
-def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> Axes:
+def plot_nj_tree(tree: Node, ax: Axes = None, taxonomies = None) -> Axes:
     """A function for plotting neighbor joining phylogeny dendrogram.
 
     Parameters
@@ -177,6 +185,9 @@ def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> Axes:
 
     """
 
+    if taxonomies == None:
+        taxonomies = {}
+
     next_leaf_y = 0
 
     def in_order_traversal(node: Node, x_position: float) -> float:
@@ -191,7 +202,7 @@ def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> Axes:
                 x_position,
                 y_position,
                 f"  {node.name}",
-                color="k",
+                color=colours.get(taxonomies.get(node.name, None), "k"),
                 fontsize=12,
                 verticalalignment="center",
             )
@@ -307,7 +318,29 @@ def sort_children_by_leaves(tree: Node) -> None:
         The root node of the tree.
 
     """
-    raise NotImplementedError()
+    def count_leaves(node: Node) -> int:
+        if node is None:
+            return 0
+        if node.left is None and node.right is None:
+            return 1
+        return count_leaves(node.left) + count_leaves(node.right)
+
+    if tree is None or (tree.left is None and tree.right is None):
+        return
+
+    left_leaves = count_leaves(tree.left)
+    right_leaves = count_leaves(tree.right)
+
+    # Swap the leaves
+    if left_leaves > right_leaves:
+        tree.left, tree.right = tree.right, tree.left
+        tree.left_distance, tree.right_distance = (
+            tree.right_distance,
+            tree.left_distance,
+        )
+
+    sort_children_by_leaves(tree.left)
+    sort_children_by_leaves(tree.right)
 
 
 def plot_nj_tree_radial(tree: Node, ax: Axes = None, **kwargs) -> None:
